@@ -39,3 +39,9 @@ on the official pages before the Phase 1 download. No data is committed to Git.
 
 - How to map AVeriTeC "Conflicting Evidence" and "Not Enough Evidence" to our UNKNOWN label.
 - Whether LIAR's six labels should be collapsed, and if so how.
+
+## Dataset versions
+
+| Dataset | Source | File | SHA256 |
+|---------|--------|------|--------|
+| LIAR | https://www.cs.ucsb.edu/~william/data/liar_dataset.zip | liar_dataset.zip | 611c1addad919743dde15822b87a60bfb760d8f85597f25289e34621800654c7 |
