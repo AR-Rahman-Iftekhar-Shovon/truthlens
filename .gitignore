@@ -1,0 +1,22 @@
+# Environment
+.venv/
+__pycache__/
+*.pyc
+.env
+
+# Data & outputs (large files never go to Git)
+data/raw/*
+data/processed/*
+outputs/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!outputs/.gitkeep
+
+# Notebooks & tools
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+.vscode/
+*.pt
+*.bin
+*.safetensors
