@@ -13,3 +13,7 @@
   as `true` and barely-true, false, pants-fire as `false` (common convention; half-true is
   ambiguous and is the main weakness of this mapping).
 - Output: data/processed/liar/{train,validation,test}.csv (not committed to Git).
+- Duplicate groups in train with conflicting original labels: 6. The first occurrence is kept.
+  This is arbitrary but affects only 6 groups; revisit if label noise turns out to matter.
+- Reproducibility: processed CSVs are written with `\n` line endings so hashes match across
+  operating systems. Row counts and SHA256 hashes are recorded in docs/liar_manifest.json.

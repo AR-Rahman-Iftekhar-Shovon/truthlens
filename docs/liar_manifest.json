@@ -1,0 +1,62 @@
+{
+  "report": {
+    "test_in_split_duplicates": 0,
+    "train_duplicate_groups_with_conflicting_labels": 6,
+    "train_in_split_duplicates": 17,
+    "train_rows_before": 10269,
+    "train_rows_overlapping_eval": 9,
+    "validation_in_split_duplicates": 0,
+    "validation_test_overlap": 0
+  },
+  "source": "liar_dataset.zip",
+  "splits": {
+    "test": {
+      "binary_label_counts": {
+        "false": 556,
+        "true": 727
+      },
+      "label_counts": {
+        "barely-true": 214,
+        "false": 250,
+        "half-true": 267,
+        "mostly-true": 249,
+        "pants-fire": 92,
+        "true": 211
+      },
+      "rows": 1283,
+      "sha256": "6508e312b9a13e439d6895dbfbbb5b9612ae159b48ec905b478f984fff768f0c"
+    },
+    "train": {
+      "binary_label_counts": {
+        "false": 4482,
+        "true": 5761
+      },
+      "label_counts": {
+        "barely-true": 1656,
+        "false": 1984,
+        "half-true": 2117,
+        "mostly-true": 1964,
+        "pants-fire": 842,
+        "true": 1680
+      },
+      "rows": 10243,
+      "sha256": "bb6574b846a99cb079ab289fd3892208bdfe8b728635915ce986d730f4f4d4c3"
+    },
+    "validation": {
+      "binary_label_counts": {
+        "false": 616,
+        "true": 668
+      },
+      "label_counts": {
+        "barely-true": 237,
+        "false": 263,
+        "half-true": 248,
+        "mostly-true": 251,
+        "pants-fire": 116,
+        "true": 169
+      },
+      "rows": 1284,
+      "sha256": "b01d8f5eb4e713138832ce0e2058e93a35beaac9490ebf7072d700e76c2cf7a5"
+    }
+  }
+}
