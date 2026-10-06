@@ -1,6 +1,6 @@
 import pytest
 
-from truthlens.liar import COLUMNS, SPLIT_FILES, liar_dir, load_split
+from truthlens.liar import COLUMNS, SPLIT_FILES, liar_dir, load_processed_split, load_split
 
 pytestmark = pytest.mark.skipif(not liar_dir().exists(), reason="LIAR data not downloaded")
 
@@ -21,3 +21,12 @@ def test_columns_and_label_set():
         "mostly-true",
         "true",
     }
+
+
+def test_processed_labels_stay_strings():
+    try:
+        train = load_processed_split("train")
+    except FileNotFoundError:
+        pytest.skip("processed LIAR data not prepared")
+
+    assert set(train["binary_label"]) == {"true", "false"}

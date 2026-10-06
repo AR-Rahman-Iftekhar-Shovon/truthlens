@@ -37,3 +37,8 @@ def load_split(split: str) -> pd.DataFrame:
         names=COLUMNS,
         quoting=csv.QUOTE_NONE,
     )
+
+
+def load_processed_split(split: str) -> pd.DataFrame:
+    path = PROJECT_ROOT / load_config()["paths"]["data_processed"] / "liar" / f"{split}.csv"
+    return pd.read_csv(path, dtype=str)
