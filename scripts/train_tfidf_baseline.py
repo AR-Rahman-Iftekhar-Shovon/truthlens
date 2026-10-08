@@ -62,7 +62,8 @@ def main() -> None:
     print(f"{experiment} (validation)")
     print(f"  accuracy: {summary['accuracy']}")
     print(
-        f"  macro_f1: {summary['macro_f1']}   (majority-class macro_f1: {majority_summary['macro_f1']})"
+        f"  macro_f1: {summary['macro_f1']}  "
+        f"(majority-class macro_f1: {majority_summary['macro_f1']})"
     )
     print(f"  labels: {labels}")
     for row in summary["confusion_matrix"]:
