@@ -26,19 +26,24 @@ on the official pages before the Phase 1 download. No data is committed to Git.
   The knowledge store is large; check its download size before planning storage.
   Non-commercial license is acceptable for this portfolio project.
 
-## Provisional stage mapping (final decision after inspection in Phase 1)
+## Roles (decided after literature notes, see docs/paper_notes.md)
 
-| Stage | Candidate |
-|-------|-----------|
-| Classical baseline and Transformer classifier (Phases 2-3) | LIAR, text-only first |
-| Evidence corpus and retrieval evaluation (Phases 5-9) | AVeriTeC knowledge store, FEVER for sanity checks |
-| Claim-evidence verification (Phase 10) | FEVER (NLI-style training), AVeriTeC (real-world evaluation) |
-| Bangla / Banglish (Phase 17) | Not surveyed yet, deliberately postponed |
+| Dataset | Role in TruthLens | Not used for |
+|---------|-------------------|--------------|
+| LIAR | Claim-level classifier baseline and Transformer classifier (Phases 2-3) | Evidence verification: its six labels are truthfulness ratings, not evidence-based verdicts |
+| FEVER | Controlled retrieval and claim-verification experiments (Phases 6-10), Wikipedia as evidence | Real-world open-web evidence |
+| AVeriTeC | Main real-world evidence and verification benchmark (Phases 5-12) | |
+| FakeNewsNet | Excluded from the core pipeline | Article-level and social-context modelling; full data cannot be redistributed |
+
+Datasets are never merged row by row. Each is used in its own role and reported separately.
 
 ## Open questions
 
-- How to map AVeriTeC "Conflicting Evidence" and "Not Enough Evidence" to our UNKNOWN label.
-- Whether LIAR's six labels should be collapsed, and if so how.
+- Handling of AVeriTeC "Conflicting Evidence/Cherrypicking" (see docs/data_decisions.md).
+- How a classifier trained on LIAR behaves on AVeriTeC claims (domain shift). Measured in
+  Phases 11 and 13; whether the classifier signal helps at all is decided by the Phase 16 ablation.
+- AVeriTeC knowledge store download size, to be checked before Phase 5.
+- LIAR and FakeNewsNet licenses to be confirmed on the official pages.
 
 ## Dataset versions
 

@@ -17,3 +17,19 @@
   This is arbitrary but affects only 6 groups; revisit if label noise turns out to matter.
 - Reproducibility: processed CSVs are written with `\n` line endings so hashes match across
   operating systems. Row counts and SHA256 hashes are recorded in docs/liar_manifest.json.
+
+  ## Verification label scheme (Phases 10-12, provisional)
+
+TruthLens verification labels: SUPPORTED, REFUTED, UNKNOWN.
+
+| Source label | TruthLens label |
+|--------------|-----------------|
+| FEVER SUPPORTS | SUPPORTED |
+| FEVER REFUTES | REFUTED |
+| FEVER NOT ENOUGH INFO | UNKNOWN |
+| AVeriTeC Supported | SUPPORTED |
+| AVeriTeC Refuted | REFUTED |
+| AVeriTeC Not Enough Evidence | UNKNOWN |
+| AVeriTeC Conflicting Evidence/Cherrypicking | not mapped; evaluated separately, never counted as REFUTED |
+
+LIAR is not mapped to this scheme. Datasets are not concatenated into one training set.
