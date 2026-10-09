@@ -1,0 +1,84 @@
+{
+  "experiment": "baseline_grid_binary_label",
+  "date": "2026-10-09",
+  "dataset": "LIAR processed, see docs/liar_manifest.json",
+  "evaluated_on": "validation",
+  "seed": 42,
+  "vectorizer": {
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 2,
+    "sublinear_tf": true
+  },
+  "class_weight": "balanced",
+  "results": [
+    {
+      "model": "logreg",
+      "C": 0.1,
+      "accuracy": 0.6231,
+      "macro_f1": 0.623
+    },
+    {
+      "model": "logreg",
+      "C": 0.3,
+      "accuracy": 0.6293,
+      "macro_f1": 0.6291
+    },
+    {
+      "model": "logreg",
+      "C": 1.0,
+      "accuracy": 0.6223,
+      "macro_f1": 0.6213
+    },
+    {
+      "model": "logreg",
+      "C": 3.0,
+      "accuracy": 0.616,
+      "macro_f1": 0.6152
+    },
+    {
+      "model": "logreg",
+      "C": 10.0,
+      "accuracy": 0.6051,
+      "macro_f1": 0.6032
+    },
+    {
+      "model": "linear_svm",
+      "C": 0.1,
+      "accuracy": 0.6215,
+      "macro_f1": 0.6207
+    },
+    {
+      "model": "linear_svm",
+      "C": 0.3,
+      "accuracy": 0.6184,
+      "macro_f1": 0.6176
+    },
+    {
+      "model": "linear_svm",
+      "C": 1.0,
+      "accuracy": 0.6012,
+      "macro_f1": 0.5994
+    },
+    {
+      "model": "linear_svm",
+      "C": 3.0,
+      "accuracy": 0.5903,
+      "macro_f1": 0.5876
+    },
+    {
+      "model": "linear_svm",
+      "C": 10.0,
+      "accuracy": 0.5818,
+      "macro_f1": 0.5786
+    }
+  ],
+  "best_on_validation": {
+    "model": "logreg",
+    "C": 0.3,
+    "accuracy": 0.6293,
+    "macro_f1": 0.6291
+  }
+}
