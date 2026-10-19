@@ -40,7 +40,8 @@ def main() -> None:
                 }
             )
             print(
-                f"{kind:<11} C={c:<5} accuracy={summary['accuracy']}  macro_f1={summary['macro_f1']}"
+                f"{kind:<11} C={c:<5} "
+                f"accuracy={summary['accuracy']}  macro_f1={summary['macro_f1']}"
             )
 
     best = max(rows, key=lambda row: row["macro_f1"])
