@@ -8,7 +8,7 @@ from truthlens.seed import set_seed
 
 LABELS = ["check-worthy", "not-check-worthy"]
 POSITIVE = "check-worthy"
-C_VALUES = [0.3, 1.0, 3.0]
+C_VALUES = [3.0, 10.0, 30.0]
 
 
 def main() -> None:

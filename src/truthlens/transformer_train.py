@@ -70,7 +70,11 @@ def fine_tune(model, train_ds, val_ds, tokenizer, id_to_label, epochs, lr, batch
             "accuracy": summary["accuracy"],
             "macro_f1": summary["macro_f1"],
             "seconds": round(time.time() - start),
+            "f1_by_class": {
+                label: round(summary["per_class"][label]["f1-score"], 4) for label in labels
+            },
         }
+
         history.append(entry)
         print(entry)
 
