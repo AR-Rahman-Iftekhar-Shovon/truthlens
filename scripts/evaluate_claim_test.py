@@ -70,10 +70,10 @@ def main() -> None:
     for set_name in eval_sets:
         runs = [metrics[(f"distilroberta_seed{s}", set_name)] for s in SEEDS]
         f1s, macros = zip(*runs)
-        print(
-            f"distilroberta mean on {set_name}: f1={np.mean(f1s):.3f} (std {np.std(f1s, ddof=1):.3f}), "
-            f"macro_f1={np.mean(macros):.3f} (std {np.std(macros, ddof=1):.3f})"
-        )
+    print(
+        f"distilroberta mean on {set_name}: f1={np.mean(f1s):.3f} (std {np.std(f1s, ddof=1):.3f}), "
+        f"macro_f1={np.mean(macros):.3f} (std {np.std(macros, ddof=1):.3f})"
+    )
 
 
 if __name__ == "__main__":
