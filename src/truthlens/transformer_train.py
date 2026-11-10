@@ -26,7 +26,18 @@ def predict(model, loader, device) -> list[int]:
     return predictions
 
 
-def fine_tune(model, train_ds, val_ds, tokenizer, id_to_label, epochs, lr, batch_size, seed):
+def fine_tune(
+    model,
+    train_ds,
+    val_ds,
+    tokenizer,
+    id_to_label,
+    epochs,
+    lr,
+    batch_size,
+    seed,
+    class_weights=None,
+):
     device = torch.device("cuda")
     model.to(device)
     collator = DataCollatorWithPadding(tokenizer)
@@ -40,6 +51,9 @@ def fine_tune(model, train_ds, val_ds, tokenizer, id_to_label, epochs, lr, batch
     total_steps = epochs * len(train_loader)
     scheduler = get_linear_schedule_with_warmup(optimizer, int(0.1 * total_steps), total_steps)
     scaler = torch.amp.GradScaler("cuda")
+    weight = (
+        torch.tensor(class_weights, dtype=torch.float, device=device) if class_weights else None
+    )
 
     labels = [id_to_label[i] for i in sorted(id_to_label)]
     val_true = [id_to_label[i] for i in val_ds.labels]
@@ -52,8 +66,10 @@ def fine_tune(model, train_ds, val_ds, tokenizer, id_to_label, epochs, lr, batch
         for batch in train_loader:
             batch = {key: value.to(device) for key, value in batch.items()}
             optimizer.zero_grad()
+            targets = batch.pop("labels")
             with torch.autocast(device_type="cuda", dtype=torch.float16):
-                loss = model(**batch).loss
+                logits = model(**batch).logits
+            loss = torch.nn.functional.cross_entropy(logits.float(), targets, weight=weight)
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)

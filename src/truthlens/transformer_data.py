@@ -2,8 +2,8 @@ import torch
 
 
 class StatementDataset(torch.utils.data.Dataset):
-    def __init__(self, statements: list[str], labels: list[int], tokenizer, max_length: int):
-        self.encodings = tokenizer(statements, truncation=True, max_length=max_length)
+    def __init__(self, statements, labels, tokenizer, max_length, pair_texts=None):
+        self.encodings = tokenizer(statements, pair_texts, truncation=True, max_length=max_length)
         self.labels = labels
 
     def __len__(self) -> int:
