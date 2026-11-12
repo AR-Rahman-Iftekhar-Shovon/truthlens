@@ -1,6 +1,7 @@
-﻿import os
 import json
+import os
 import urllib.request
+
 
 def search_web(query):
     api_key = os.getenv("TAVILY_API_KEY")
@@ -12,14 +13,14 @@ def search_web(query):
         "query": query,
         "search_depth": "basic",
         "max_results": 5,
-        "include_answer": True
+        "include_answer": True,
     }
 
     req = urllib.request.Request(
         "https://api.tavily.com/search",
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json"},
-        method="POST"
+        method="POST",
     )
 
     with urllib.request.urlopen(req, timeout=30) as response:
@@ -33,6 +34,7 @@ def search_web(query):
         print(f"\n{i}. {result.get('title')}")
         print("URL:", result.get("url"))
         print("CONTENT:", result.get("content", "")[:500])
+
 
 if __name__ == "__main__":
     query = input("Enter a claim to research: ")

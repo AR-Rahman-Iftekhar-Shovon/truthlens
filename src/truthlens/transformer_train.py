@@ -26,6 +26,17 @@ def predict(model, loader, device) -> list[int]:
     return predictions
 
 
+@torch.no_grad()
+def predict_proba(model, loader, device) -> list[list[float]]:
+    model.eval()
+    probabilities = []
+    for batch in loader:
+        inputs = {key: value.to(device) for key, value in batch.items() if key != "labels"}
+        logits = model(**inputs).logits.float()
+        probabilities.extend(torch.softmax(logits, dim=-1).cpu().tolist())
+    return probabilities
+
+
 def fine_tune(
     model,
     train_ds,

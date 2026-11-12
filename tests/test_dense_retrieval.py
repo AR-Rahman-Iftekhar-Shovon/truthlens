@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from truthlens.dense_retrieval import retrieve
+from truthlens.dense_retrieval import retrieve, retrieve_with_scores
 
 
 class FakeModel:
@@ -22,3 +22,15 @@ def test_retrieve_orders_by_similarity():
     )
 
     assert retrieve(claims, evidence, FakeModel(), k=2)["c1"] == ["e2", "e1"]
+
+
+def test_retrieve_with_scores_returns_descending_scores():
+    claims = pd.DataFrame({"claim_id": ["c1"], "claim": ["moon claim"]})
+    evidence = pd.DataFrame(
+        {"evidence_id": ["e1", "e2"], "text": ["tax evidence", "moon evidence"]}
+    )
+
+    ranked = retrieve_with_scores(claims, evidence, FakeModel(), k=2)["c1"]
+
+    assert [evidence_id for evidence_id, _ in ranked] == ["e2", "e1"]
+    assert ranked[0][1] > ranked[1][1]
