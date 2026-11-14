@@ -1,0 +1,21 @@
+{
+  "experiment": "decision_calibration",
+  "date": "2026-11-14",
+  "temperature": 1.8000000000000012,
+  "thresholds": {
+    "confidence": 0.4,
+    "top1_score": 0.55
+  },
+  "dev": {
+    "argmax (abstain only if UNKNOWN)": {
+      "macro_f1": 0.5045,
+      "coverage": 0.961,
+      "accuracy_on_answered": 0.714
+    },
+    "decision layer (thresholds from val)": {
+      "macro_f1": 0.5077,
+      "coverage": 0.859,
+      "accuracy_on_answered": 0.725
+    }
+  }
+}

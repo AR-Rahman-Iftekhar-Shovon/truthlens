@@ -12,15 +12,8 @@ from truthlens.calibration import (
     softmax_with_temperature,
 )
 from truthlens.config import PROJECT_ROOT, load_config
-from truthlens.decision import INSUFFICIENT, decide
+from truthlens.decision import INSUFFICIENT, decide, load_rows
 from truthlens.verification_data import LABELS
-
-
-def load_rows(rows: list[dict]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    probs = np.array([row["probs"] for row in rows])
-    labels = np.array([LABELS.index(row["label"]) for row in rows])
-    scores = np.array([row.get("top1_score", 0.0) for row in rows])
-    return probs, labels, scores
 
 
 def evaluate(probs, labels, scores, prob_threshold: float, score_threshold: float) -> dict:
@@ -79,7 +72,8 @@ def main() -> None:
                 best = (result["macro_f1"], float(prob_threshold), float(score_threshold))
     _, prob_threshold, score_threshold = best
     print(
-        f"\nthresholds chosen on val: confidence >= {prob_threshold:.2f}, retrieval top1 >= {score_threshold:.2f}"
+        f"\nthresholds chosen on val: confidence >= {prob_threshold:.2f}, "
+        f"retrieval top1 >= {score_threshold:.2f}"
     )
 
     results = {
