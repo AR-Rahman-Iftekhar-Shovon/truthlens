@@ -25,6 +25,33 @@ def strip_noise(text: str) -> str:
     return "".join(ch for ch in text.lower() if ch.isalnum() or ch.isspace())
 
 
+def evidence_conditions(
+    retrieved_texts: dict[str, list[str]],
+    misleading: dict[str, list[str]],
+    evidence: pd.DataFrame,
+    seed: int,
+    max_passages: int = 5,
+) -> dict[str, dict[str, list[str]]]:
+    rng = random.Random(seed)
+    pool = list(zip(evidence["claim_id"], evidence["text"]))
+    random_texts = {}
+    for claim_id in retrieved_texts:
+        others = [text for owner, text in pool if owner != claim_id]
+        random_texts[claim_id] = rng.sample(others, max_passages)
+    return {
+        "clean": retrieved_texts,
+        "misleading_evidence": {
+            claim_id: misleading.get(claim_id) or texts
+            for claim_id, texts in retrieved_texts.items()
+        },
+        "mixed_evidence": {
+            claim_id: texts[:3] + misleading.get(claim_id, [])[:2]
+            for claim_id, texts in retrieved_texts.items()
+        },
+        "random_evidence": random_texts,
+    }
+
+
 def build_conditions(
     dev_claims: pd.DataFrame,
     retrieved_texts: dict[str, list[str]],
@@ -33,8 +60,8 @@ def build_conditions(
     seed: int,
     max_passages: int = 5,
 ) -> dict[str, pd.DataFrame]:
-    rng = random.Random(seed)
-    conditions = {"clean": build_examples(dev_claims, retrieved_texts, max_passages)}
+    texts = evidence_conditions(retrieved_texts, misleading, evidence, seed, max_passages)
+    conditions = {"clean": build_examples(dev_claims, texts["clean"], max_passages)}
 
     perturbations = (
         ("claim_typos", lambda text: add_typos(text, 0.15, seed)),
@@ -45,18 +72,7 @@ def build_conditions(
         perturbed = dev_claims.assign(claim=dev_claims["claim"].map(transform))
         conditions[name] = build_examples(perturbed, retrieved_texts, max_passages)
 
-    only_misleading = {cid: misleading.get(cid) or texts for cid, texts in retrieved_texts.items()}
-    conditions["misleading_evidence"] = build_examples(dev_claims, only_misleading, max_passages)
-
-    mixed = {cid: texts[:3] + misleading.get(cid, [])[:2] for cid, texts in retrieved_texts.items()}
-    conditions["mixed_evidence"] = build_examples(dev_claims, mixed, max_passages)
-
-    pool = list(zip(evidence["claim_id"], evidence["text"]))
-    random_texts = {}
-    for claim_id in retrieved_texts:
-        others = [text for owner, text in pool if owner != claim_id]
-        random_texts[claim_id] = rng.sample(others, max_passages)
-    conditions["random_evidence"] = build_examples(dev_claims, random_texts, max_passages)
-
+    for name in ("misleading_evidence", "mixed_evidence", "random_evidence"):
+        conditions[name] = build_examples(dev_claims, texts[name], max_passages)
     conditions["no_evidence"] = build_examples(dev_claims, {}, max_passages)
     return conditions

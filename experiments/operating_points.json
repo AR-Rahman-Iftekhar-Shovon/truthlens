@@ -1,0 +1,42 @@
+{
+  "experiment": "operating_points",
+  "date": "2026-11-14",
+  "points": {
+    "0.75": {
+      "confidence": 0.6,
+      "top1_score": 0.0,
+      "val": {
+        "coverage": 0.719,
+        "accuracy": 0.751
+      },
+      "dev": {
+        "coverage": 0.716,
+        "accuracy": 0.792
+      }
+    },
+    "0.8": {
+      "confidence": 0.75,
+      "top1_score": 0.0,
+      "val": {
+        "coverage": 0.409,
+        "accuracy": 0.824
+      },
+      "dev": {
+        "coverage": 0.424,
+        "accuracy": 0.842
+      }
+    },
+    "0.85": {
+      "confidence": 0.75,
+      "top1_score": 0.65,
+      "val": {
+        "coverage": 0.295,
+        "accuracy": 0.85
+      },
+      "dev": {
+        "coverage": 0.307,
+        "accuracy": 0.824
+      }
+    }
+  }
+}

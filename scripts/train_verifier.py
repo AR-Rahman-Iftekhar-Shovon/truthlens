@@ -4,10 +4,11 @@ from datetime import date
 
 import numpy as np
 import torch
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import CrossEncoder, SentenceTransformer
 from torch.utils.data import DataLoader
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding
 
+from truthlens.analysis_dump import collect
 from truthlens.averitec import load_averitec_tables, load_misleading_passages
 from truthlens.config import PROJECT_ROOT
 from truthlens.dense_retrieval import retrieve_with_scores
@@ -19,6 +20,7 @@ from truthlens.verification_data import LABELS, build_examples
 
 MODEL = "distilroberta-base"
 DENSE_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 MAX_LENGTH = 384
 TOP_K = 5
 EPOCHS = 4
@@ -76,6 +78,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--robustness", action="store_true")
+    parser.add_argument("--analysis", action="store_true")
     args = parser.parse_args()
     seed = args.seed
     set_torch_seed(seed)
@@ -148,6 +151,20 @@ def main() -> None:
                 robustness[name] = dump(examples, dataset, model, tokenizer, device)
             (out_dir / f"verifier_robustness_seed{seed}.json").write_text(json.dumps(robustness))
 
+        if args.analysis:
+            analysis = collect(
+                dev_claims,
+                evidence,
+                passages,
+                dense_model,
+                CrossEncoder(RERANK_MODEL),
+                load_misleading_passages(),
+                seed,
+                lambda examples: dump(
+                    examples, make_dataset(examples, tokenizer, True), model, tokenizer, device
+                ),
+            )
+            (out_dir / f"verifier_analysis_seed{seed}.json").write_text(json.dumps(analysis))
         probabilities = {
             "labels": LABELS,
             "val_retrieved": dump(val_retrieved, val_set, model, tokenizer, device, val_scores),
