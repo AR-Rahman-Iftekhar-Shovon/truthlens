@@ -12,3 +12,11 @@ def load_averitec_tables() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 def gold_by_claim(evidence: pd.DataFrame) -> dict[str, set[str]]:
     return evidence.groupby("claim_id")["evidence_id"].apply(set).to_dict()
+
+
+def load_misleading_passages() -> dict[str, list[str]]:
+    path = (
+        PROJECT_ROOT / load_config()["paths"]["data_processed"] / "averitec" / "misleading_dev.csv"
+    )
+    frame = pd.read_csv(path, keep_default_na=False)
+    return frame.groupby("query_claim_id")["text"].apply(list).to_dict()

@@ -8,10 +8,11 @@ from sentence_transformers import SentenceTransformer
 from torch.utils.data import DataLoader
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding
 
-from truthlens.averitec import load_averitec_tables
+from truthlens.averitec import load_averitec_tables, load_misleading_passages
 from truthlens.config import PROJECT_ROOT
 from truthlens.dense_retrieval import retrieve_with_scores
 from truthlens.evaluation import summarize
+from truthlens.robustness import build_conditions
 from truthlens.transformer_data import StatementDataset
 from truthlens.transformer_train import fine_tune, predict, predict_proba, set_torch_seed
 from truthlens.verification_data import LABELS, build_examples
@@ -74,7 +75,9 @@ def retrieve_evidence(claims_subset, evidence, passages, dense_model):
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=42)
-    seed = parser.parse_args().seed
+    parser.add_argument("--robustness", action="store_true")
+    args = parser.parse_args()
+    seed = args.seed
     set_torch_seed(seed)
     device = torch.device("cuda")
     out_dir = PROJECT_ROOT / "outputs"
@@ -135,6 +138,15 @@ def main() -> None:
         results["dev, gold evidence"] = report(f"{variant} | dev gold evidence", summary)
         summary = evaluate(model, retrieved_set, tokenizer, device)
         results["dev, retrieved evidence"] = report(f"{variant} | dev top-{TOP_K}", summary)
+        if args.robustness:
+            conditions = build_conditions(
+                dev_claims, dev_texts, load_misleading_passages(), evidence, seed
+            )
+            robustness = {}
+            for name, examples in conditions.items():
+                dataset = make_dataset(examples, tokenizer, True)
+                robustness[name] = dump(examples, dataset, model, tokenizer, device)
+            (out_dir / f"verifier_robustness_seed{seed}.json").write_text(json.dumps(robustness))
 
         probabilities = {
             "labels": LABELS,
