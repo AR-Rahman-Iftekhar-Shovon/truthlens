@@ -1,0 +1,62 @@
+{
+  "experiment": "robustness",
+  "date": "2026-11-14",
+  "conditions": {
+    "clean": {
+      "accuracy": 0.697,
+      "macro_f1": 0.5045,
+      "mean_confidence": 0.698,
+      "coverage": 0.424,
+      "accuracy_on_answered": 0.842
+    },
+    "claim_typos": {
+      "accuracy": 0.6926,
+      "macro_f1": 0.4994,
+      "mean_confidence": 0.6971,
+      "coverage": 0.433,
+      "accuracy_on_answered": 0.84
+    },
+    "claim_sensational": {
+      "accuracy": 0.6991,
+      "macro_f1": 0.4125,
+      "mean_confidence": 0.7239,
+      "coverage": 0.539,
+      "accuracy_on_answered": 0.827
+    },
+    "claim_noisy_text": {
+      "accuracy": 0.6861,
+      "macro_f1": 0.4924,
+      "mean_confidence": 0.6988,
+      "coverage": 0.435,
+      "accuracy_on_answered": 0.846
+    },
+    "misleading_evidence": {
+      "accuracy": 0.3745,
+      "macro_f1": 0.2884,
+      "mean_confidence": 0.6324,
+      "coverage": 0.266,
+      "accuracy_on_answered": 0.333
+    },
+    "mixed_evidence": {
+      "accuracy": 0.6407,
+      "macro_f1": 0.4474,
+      "mean_confidence": 0.6819,
+      "coverage": 0.398,
+      "accuracy_on_answered": 0.815
+    },
+    "random_evidence": {
+      "accuracy": 0.5476,
+      "macro_f1": 0.2924,
+      "mean_confidence": 0.6476,
+      "coverage": 0.288,
+      "accuracy_on_answered": 0.699
+    },
+    "no_evidence": {
+      "accuracy": 0.2532,
+      "macro_f1": 0.2015,
+      "mean_confidence": 0.5817,
+      "coverage": 0.006,
+      "accuracy_on_answered": 1.0
+    }
+  }
+}
