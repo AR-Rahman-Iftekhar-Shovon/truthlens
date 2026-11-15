@@ -24,7 +24,7 @@ from truthlens.verification_data import LABELS, format_evidence
 MODEL = "distilroberta-base"
 DENSE_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 CONFIDENCE_THRESHOLD = 0.75
-SIMILARITY_THRESHOLD = 0.45
+SIMILARITY_THRESHOLD = 0.55
 TOP_K = 5
 DEPTH = 100
 MAX_LENGTH = 384
@@ -52,6 +52,7 @@ def main() -> None:
     by_id = evidence.set_index("evidence_id")
     texts = {cid: [by_id.loc[e, "text"] for e in ids] for cid, ids in hybrid.items()}
     claim_texts = dict(zip(queries["claim_id"], queries["claim"]))
+    gold_labels = dict(zip(claims["claim_id"], claims["label_mapped"]))
     similarity = max_similarity(dense_model, claim_texts, texts)
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
@@ -98,6 +99,8 @@ def main() -> None:
                 reason,
             )
         )
+        if claim_id in gold_labels:
+            print(f"Gold label (dev): {gold_labels[claim_id]}")
         print("-" * 60)
 
 
