@@ -12,7 +12,7 @@ from truthlens.config import PROJECT_ROOT
 
 TAVILY_URL = "https://api.tavily.com/search"
 RETRY_CODES = (429, 500, 502, 503, 504)
-DOMAIN_GROUPS = ("fact_checkers", "news_agencies")
+DOMAIN_GROUPS = ("fact_checkers", "news_agencies", "official_sources")
 
 
 def _load_groups(name: str, groups: tuple[str, ...]) -> list[str]:

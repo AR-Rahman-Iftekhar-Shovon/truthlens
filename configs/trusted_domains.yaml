@@ -34,6 +34,14 @@ news_agencies:
   - btrc.gov.bd
   - who.int
 
+official_sources:
+  - un.org
+  - unesco.org
+  - whc.unesco.org
+  - parliament.gov.bd
+  - mofa.gov.bd
+  - bdlaws.minlaw.gov.bd
+
 language_support:
     - Bengali
     - English
