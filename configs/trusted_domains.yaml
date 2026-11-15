@@ -1,0 +1,46 @@
+# Draft allowlist for live web evidence. Review and edit before trusting any verdict.
+fact_checkers:
+    - snopes.com
+    - politifact.com
+    - factcheck.org
+    - fullfact.org
+    - reuters.com
+    - apnews.com
+    - boomlive.in
+    - altnews.in
+    - rumorscanner.com
+    - fact-watch.org
+    - boombd.com
+    - jachai.org
+    - en.dismislab.com
+
+news_agencies:
+  - bbc.com
+  - aljazeera.com
+  - thedailystar.net
+  - prothomalo.com
+  - dhakatribune.com
+  - bdnews24.com
+  - bssnews.net
+  - unb.com.bd
+  - jagonews24.com
+  - banglanews24.com
+  - jugantor.com
+  - kalerkantho.com
+  - bangladesh.gov.bd
+  - bbs.gov.bd
+  - bb.org.bd
+  - ecs.gov.bd
+  - btrc.gov.bd
+  - who.int
+
+language_support:
+    - Bengali
+    - English
+
+verification_requirements:
+    - source_independence
+    - publication_date
+    - original_evidence
+    - claim_context
+    - cross_source_verification
