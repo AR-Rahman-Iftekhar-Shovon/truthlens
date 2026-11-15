@@ -1,4 +1,6 @@
-from truthlens.live_verdict import decide_live_verdict
+from truthlens.live_verdict import build_stances, decide_live_verdict
+
+LABELS = ["SUPPORTED", "REFUTED", "UNKNOWN"]
 
 FACT_CHECKERS = {"snopes.com"}
 
@@ -51,3 +53,12 @@ def test_conflict_is_insufficient():
 def test_low_confidence_stance_is_ignored():
     snippets = [snip("bbc.com", "SUPPORTED", 0.5), snip("reuters.com", "SUPPORTED", 0.6)]
     assert verdict(snippets) == "INSUFFICIENT_EVIDENCE"
+
+
+def test_build_stances_marks_unrelated_snippet_unknown():
+    snippets = [{"domain": "bbc.com"}, {"domain": "reuters.com"}]
+    probs = [[0.9, 0.05, 0.05], [0.1, 0.8, 0.1]]
+    stances = build_stances(snippets, probs, [0.7, 0.3], LABELS, 0.55)
+    assert stances[0]["stance"] == "SUPPORTED"
+    assert stances[1]["stance"] == "UNKNOWN"
+    assert stances[1]["domain"] == "reuters.com"

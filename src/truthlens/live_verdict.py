@@ -42,3 +42,26 @@ def _result(verdict: str, reason: str, supporting: set[str], refuting: set[str])
         "supporting_domains": sorted(supporting),
         "refuting_domains": sorted(refuting),
     }
+
+
+def build_stances(
+    snippets: list[dict],
+    probabilities: list[list[float]],
+    similarities: list[float],
+    labels: list[str],
+    min_similarity: float,
+) -> list[dict]:
+    """Attach a stance per snippet; snippets unrelated to the claim count as UNKNOWN."""
+    stances = []
+    for snippet, probs, similarity in zip(snippets, probabilities, similarities, strict=True):
+        best = max(range(len(labels)), key=lambda i: probs[i])
+        related = similarity >= min_similarity
+        stances.append(
+            {
+                **snippet,
+                "stance": labels[best] if related else "UNKNOWN",
+                "confidence": float(probs[best]),
+                "similarity": float(similarity),
+            }
+        )
+    return stances
