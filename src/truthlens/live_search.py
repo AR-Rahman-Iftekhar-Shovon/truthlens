@@ -15,10 +15,18 @@ RETRY_CODES = (429, 500, 502, 503, 504)
 DOMAIN_GROUPS = ("fact_checkers", "news_agencies")
 
 
-def load_trusted_domains(name: str = "trusted_domains") -> list[str]:
+def _load_groups(name: str, groups: tuple[str, ...]) -> list[str]:
     with open(PROJECT_ROOT / "configs" / f"{name}.yaml", encoding="utf-8") as f:
         config = yaml.safe_load(f)
-    return sorted({domain for group in DOMAIN_GROUPS for domain in config.get(group, [])})
+    return sorted({domain for group in groups for domain in config.get(group, [])})
+
+
+def load_trusted_domains(name: str = "trusted_domains") -> list[str]:
+    return _load_groups(name, DOMAIN_GROUPS)
+
+
+def load_fact_checkers(name: str = "trusted_domains") -> set[str]:
+    return set(_load_groups(name, ("fact_checkers",)))
 
 
 def domain_of(url: str) -> str:
