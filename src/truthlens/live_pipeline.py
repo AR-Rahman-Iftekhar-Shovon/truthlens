@@ -11,6 +11,7 @@ from truthlens.config import PROJECT_ROOT
 from truthlens.decision import load_rows
 from truthlens.live_search import load_fact_checkers, load_trusted_domains, search_evidence
 from truthlens.live_verdict import build_stances, decide_live_verdict
+from truthlens.nli_stance import load_nli_stance_fn
 from truthlens.transformer_data import StatementDataset
 from truthlens.transformer_train import predict_proba
 from truthlens.verification_data import LABELS
@@ -21,21 +22,34 @@ SIMILARITY_THRESHOLD = 0.55
 MAX_LENGTH = 384
 
 
-def load_live_verifier(seed: int) -> dict:
+def _verifier_stance_fn(seed: int, device: torch.device):
     outputs = PROJECT_ROOT / "outputs"
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
     model = AutoModelForSequenceClassification.from_pretrained(MODEL, num_labels=len(LABELS))
     model.load_state_dict(torch.load(outputs / f"verifier_seed{seed}.pt"))
-    device = torch.device("cuda")
     model.to(device)
     probs_file = json.loads((outputs / f"verifier_probs_seed{seed}.json").read_text())
     val_probs, val_labels, _ = load_rows(probs_file["val_retrieved"])
+    temperature = fit_temperature(val_probs, val_labels)
+
+    def stance_probabilities(claim: str, snippets: list[str]) -> np.ndarray:
+        n = len(snippets)
+        dataset = StatementDataset([claim] * n, [0] * n, tokenizer, MAX_LENGTH, snippets)
+        loader = DataLoader(dataset, batch_size=16, collate_fn=DataCollatorWithPadding(tokenizer))
+        probabilities = np.array(predict_proba(model, loader, device))
+        return softmax_with_temperature(probabilities, temperature)
+
+    return stance_probabilities
+
+
+def load_live_verifier(seed: int, stance: str = "verifier") -> dict:
+    device = torch.device("cuda")
+    stance_fn = (
+        _verifier_stance_fn(seed, device) if stance == "verifier" else load_nli_stance_fn(device)
+    )
     return {
-        "tokenizer": tokenizer,
-        "model": model,
-        "device": device,
+        "stance_fn": stance_fn,
         "dense_model": SentenceTransformer(DENSE_MODEL),
-        "temperature": fit_temperature(val_probs, val_labels),
         "domains": load_trusted_domains(),
         "fact_checkers": load_fact_checkers(),
     }
@@ -50,19 +64,15 @@ def verify_live_claim(claim: str, verifier: dict) -> dict:
             "reason": "no results from trusted domains",
             "stances": [],
         }
-    tokenizer = verifier["tokenizer"]
     texts = [s["snippet"] for s in snippets]
-    dataset = StatementDataset([claim] * len(texts), [0] * len(texts), tokenizer, MAX_LENGTH, texts)
-    loader = DataLoader(dataset, batch_size=16, collate_fn=DataCollatorWithPadding(tokenizer))
-    probabilities = np.array(predict_proba(verifier["model"], loader, verifier["device"]))
-    calibrated = softmax_with_temperature(probabilities, verifier["temperature"])
+    probabilities = verifier["stance_fn"](claim, texts)
 
     dense_model = verifier["dense_model"]
     claim_vector = dense_model.encode([claim], normalize_embeddings=True)[0]
     similarities = (dense_model.encode(texts, normalize_embeddings=True) @ claim_vector).tolist()
 
     stances = build_stances(
-        snippets, calibrated.tolist(), similarities, LABELS, SIMILARITY_THRESHOLD
+        snippets, probabilities.tolist(), similarities, LABELS, SIMILARITY_THRESHOLD
     )
     result = decide_live_verdict(stances, verifier["fact_checkers"])
     return {"claim": claim, "stances": stances, **result}

@@ -7,9 +7,10 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--claim", action="append", required=True)
     parser.add_argument("--seed", type=int, default=44)
+    parser.add_argument("--stance", choices=["verifier", "nli"], default="verifier")
     args = parser.parse_args()
 
-    verifier = load_live_verifier(args.seed)
+    verifier = load_live_verifier(args.seed, args.stance)
     for claim in args.claim:
         result = verify_live_claim(claim, verifier)
         print(f"Claim: {claim}")
