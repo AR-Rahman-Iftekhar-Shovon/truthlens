@@ -1,0 +1,26 @@
+{
+  "note": "Hand-recorded from the Kaggle run (2026-11-16). Seed 44 verifier, 462 dev claims, hybrid top-5. Single seed, no confidence intervals or significance test.",
+  "seed": 44,
+  "all_dev_claims": {
+    "n_claims": 462,
+    "no_evidence_changes_verdict": 0.7597402597402597,
+    "any_single_removal_flips_verdict": 0.24891774891774893,
+    "mean_max_probability_drop": 0.13557722805555217,
+    "claims_with_gold_and_other_passages": 380,
+    "top_influential_is_gold": 0.3868421052631579,
+    "chance_top_is_gold": 0.3510526315789473,
+    "mean_drop_gold_passage": 0.024907131426123694,
+    "mean_drop_other_passage": 0.019987197483332594
+  },
+  "answered_only": {
+    "n_claims": 197,
+    "no_evidence_changes_verdict": 0.7208121827411168,
+    "any_single_removal_flips_verdict": 0.1065989847715736,
+    "mean_max_probability_drop": 0.13745367064004163,
+    "claims_with_gold_and_other_passages": 179,
+    "top_influential_is_gold": 0.4301675977653631,
+    "chance_top_is_gold": 0.35307262569832404,
+    "mean_drop_gold_passage": 0.038172560187671595,
+    "mean_drop_other_passage": 0.023997997109760697
+  }
+}
