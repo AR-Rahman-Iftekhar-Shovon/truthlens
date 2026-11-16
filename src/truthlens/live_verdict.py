@@ -10,7 +10,9 @@ def decide_live_verdict(
 ) -> dict:
     """Combine per-snippet stances (domain, stance, confidence) into one verdict.
 
-    No coverage or conflicting evidence gives INSUFFICIENT_EVIDENCE, never REFUTED.
+    REFUTED needs a fact-checking site: stance errors on related text are correlated across
+    domains, so several non-fact-checkers refuting is not enough. No coverage or conflicting
+    evidence gives INSUFFICIENT_EVIDENCE.
     """
     strong = [s for s in snippets if s["confidence"] >= min_confidence]
     supporting = {s["domain"] for s in strong if s["stance"] == "SUPPORTED"}
@@ -25,10 +27,6 @@ def decide_live_verdict(
     if len(supporting) >= min_domains:
         return _result(
             "SUPPORTED", f"{len(supporting)} independent trusted domains", supporting, refuting
-        )
-    if len(refuting) >= min_domains:
-        return _result(
-            "REFUTED", f"{len(refuting)} independent trusted domains", supporting, refuting
         )
     return _result(
         "INSUFFICIENT_EVIDENCE", "not enough independent trusted evidence", supporting, refuting

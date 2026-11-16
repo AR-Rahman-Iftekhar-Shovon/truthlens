@@ -36,9 +36,12 @@ def test_fact_checker_refutation_is_enough():
     assert verdict([snip("snopes.com", "REFUTED")]) == "REFUTED"
 
 
-def test_non_fact_checker_needs_two_domains_to_refute():
+def test_non_fact_checkers_cannot_refute():
     assert verdict([snip("bbc.com", "REFUTED")]) == "INSUFFICIENT_EVIDENCE"
-    assert verdict([snip("bbc.com", "REFUTED"), snip("reuters.com", "REFUTED")]) == "REFUTED"
+    assert (
+        verdict([snip("bbc.com", "REFUTED"), snip("reuters.com", "REFUTED")])
+        == "INSUFFICIENT_EVIDENCE"
+    )
 
 
 def test_conflict_is_insufficient():
