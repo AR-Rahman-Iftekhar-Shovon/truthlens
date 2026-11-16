@@ -22,7 +22,7 @@ SIMILARITY_THRESHOLD = 0.55
 MAX_LENGTH = 384
 
 
-def _verifier_stance_fn(seed: int, device: torch.device):
+def verifier_probabilities_fn(seed: int, device: torch.device):
     outputs = PROJECT_ROOT / "outputs"
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
     model = AutoModelForSequenceClassification.from_pretrained(MODEL, num_labels=len(LABELS))
@@ -32,23 +32,27 @@ def _verifier_stance_fn(seed: int, device: torch.device):
     val_probs, val_labels, _ = load_rows(probs_file["val_retrieved"])
     temperature = fit_temperature(val_probs, val_labels)
 
-    def stance_probabilities(claim: str, snippets: list[str]) -> np.ndarray:
-        n = len(snippets)
-        dataset = StatementDataset([claim] * n, [0] * n, tokenizer, MAX_LENGTH, snippets)
+    def probabilities(claims: list[str], evidence: list[str]) -> np.ndarray:
+        dataset = StatementDataset(claims, [0] * len(claims), tokenizer, MAX_LENGTH, evidence)
         loader = DataLoader(dataset, batch_size=16, collate_fn=DataCollatorWithPadding(tokenizer))
-        probabilities = np.array(predict_proba(model, loader, device))
-        return softmax_with_temperature(probabilities, temperature)
+        raw = np.array(predict_proba(model, loader, device))
+        return softmax_with_temperature(raw, temperature)
 
-    return stance_probabilities
+    return probabilities
 
 
 def load_live_verifier(
     seed: int, stance: str = "verifier", depth: str = "basic", max_results: int = 5
 ) -> dict:
     device = torch.device("cuda")
-    stance_fn = (
-        _verifier_stance_fn(seed, device) if stance == "verifier" else load_nli_stance_fn(device)
-    )
+    if stance == "verifier":
+        probabilities = verifier_probabilities_fn(seed, device)
+
+        def stance_fn(claim: str, snippets: list[str]) -> np.ndarray:
+            return probabilities([claim] * len(snippets), snippets)
+
+    else:
+        stance_fn = load_nli_stance_fn(device)
     return {
         "stance_fn": stance_fn,
         "dense_model": SentenceTransformer(DENSE_MODEL),
