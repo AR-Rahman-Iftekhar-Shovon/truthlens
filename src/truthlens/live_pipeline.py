@@ -42,7 +42,9 @@ def _verifier_stance_fn(seed: int, device: torch.device):
     return stance_probabilities
 
 
-def load_live_verifier(seed: int, stance: str = "verifier") -> dict:
+def load_live_verifier(
+    seed: int, stance: str = "verifier", depth: str = "basic", max_results: int = 5
+) -> dict:
     device = torch.device("cuda")
     stance_fn = (
         _verifier_stance_fn(seed, device) if stance == "verifier" else load_nli_stance_fn(device)
@@ -52,11 +54,15 @@ def load_live_verifier(seed: int, stance: str = "verifier") -> dict:
         "dense_model": SentenceTransformer(DENSE_MODEL),
         "domains": load_trusted_domains(),
         "fact_checkers": load_fact_checkers(),
+        "depth": depth,
+        "max_results": max_results,
     }
 
 
 def verify_live_claim(claim: str, verifier: dict) -> dict:
-    snippets = search_evidence(claim, verifier["domains"])
+    snippets = search_evidence(
+        claim, verifier["domains"], verifier["max_results"], depth=verifier["depth"]
+    )
     if not snippets:
         return {
             "claim": claim,

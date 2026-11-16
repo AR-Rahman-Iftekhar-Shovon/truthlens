@@ -13,10 +13,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=44)
     parser.add_argument("--stance", choices=["verifier", "nli"], default="verifier")
+    parser.add_argument("--depth", choices=["basic", "advanced"], default="basic")
+    parser.add_argument("--max-results", type=int, default=5)
     args = parser.parse_args()
+    tag = f"{args.stance}_{args.depth}_{args.max_results}"
 
     claims = json.loads(CLAIMS_FILE.read_text(encoding="utf-8"))
-    verifier = load_live_verifier(args.seed, args.stance)
+    verifier = load_live_verifier(args.seed, args.stance, args.depth, args.max_results)
     rows = []
     for item in claims:
         result = verify_live_claim(item["claim"], verifier)
@@ -28,17 +31,19 @@ def main() -> None:
 
     outputs = PROJECT_ROOT / "outputs"
     outputs.mkdir(exist_ok=True)
-    (outputs / f"live_eval_predictions_{args.stance}.json").write_text(
+    (outputs / f"live_eval_predictions_{tag}.json").write_text(
         json.dumps(rows, indent=2), encoding="utf-8"
     )
     settings = {
         "stance_model": args.stance,
+        "search_depth": args.depth,
+        "max_results": args.max_results,
         "seed": args.seed,
         "similarity_gate": SIMILARITY_THRESHOLD,
         "stance_confidence": MIN_STANCE_CONFIDENCE,
         "min_domains": MIN_DOMAINS,
     }
-    (PROJECT_ROOT / "experiments" / f"live_eval_{args.stance}.json").write_text(
+    (PROJECT_ROOT / "experiments" / f"live_eval_{tag}.json").write_text(
         json.dumps({"settings": settings, **summary}, indent=2), encoding="utf-8"
     )
 

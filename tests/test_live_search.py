@@ -45,7 +45,8 @@ def test_search_payload_has_allowlist_and_no_answer(monkeypatch):
         seen.update(payload)
         return {"results": [{"url": "https://bbc.com/a", "content": "c"}]}
 
-    results = search_evidence("claim", ["bbc.com"], post=fake_post)
+    results = search_evidence("claim", ["bbc.com"], depth="advanced", post=fake_post)
+    assert seen["search_depth"] == "advanced"
     assert seen["include_answer"] is False
     assert seen["include_domains"] == ["bbc.com"]
     assert results[0]["domain"] == "bbc.com"

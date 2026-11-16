@@ -62,6 +62,7 @@ def search_evidence(
     query: str,
     domains: list[str],
     max_results: int = 5,
+    depth: str = "basic",
     post: Callable[[str, dict], dict] = post_json,
     attempts: int = 3,
 ) -> list[dict]:
@@ -72,7 +73,7 @@ def search_evidence(
     payload = {
         "api_key": api_key,
         "query": query,
-        "search_depth": "basic",
+        "search_depth": depth,
         "max_results": max_results,
         "include_answer": False,
         "include_domains": domains,
