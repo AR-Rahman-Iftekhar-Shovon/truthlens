@@ -1,0 +1,10 @@
+{
+  "note": "Hand-recorded from Kaggle runs on 2026-11-16 (20 custom claims, one run each, n is tiny). Rows 2 and 3 use the same saved stances; row 3 re-applies the final verdict rule offline. Search depth, max_results and the REFUTED rule were chosen after seeing these same claims, so the numbers are optimistic.",
+  "claims_file": "experiments/custom_eval_claims.json",
+  "runs": [
+    {"stance": "verifier (seed 44)", "search": "basic, 5 results", "refuted_rule": "fact-checker or 2 domains", "accuracy": 0.20, "coverage": 0.10, "wrong_answers": 0, "answered": 2},
+    {"stance": "nli-deberta-v3-small", "search": "basic, 5 results", "refuted_rule": "fact-checker or 2 domains", "accuracy": 0.15, "coverage": 0.05, "wrong_answers": 0, "answered": 1},
+    {"stance": "nli-deberta-v3-small", "search": "advanced, 10 results", "refuted_rule": "fact-checker or 2 domains", "accuracy": 0.25, "coverage": 0.25, "accuracy_on_answered": 0.8, "wrong_answers": 1, "answered": 5},
+    {"stance": "nli-deberta-v3-small", "search": "advanced, 10 results", "refuted_rule": "fact-checker only (final)", "accuracy": 0.25, "coverage": 0.15, "accuracy_on_answered": 1.0, "wrong_answers": 0, "answered": 3, "by_label_predicted": {"REFUTED": {"REFUTED": 2, "INSUFFICIENT_EVIDENCE": 8}, "SUPPORTED": {"SUPPORTED": 1, "INSUFFICIENT_EVIDENCE": 7}, "INSUFFICIENT_EVIDENCE": {"INSUFFICIENT_EVIDENCE": 2}}}
+  ]
+}
