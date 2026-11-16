@@ -26,4 +26,6 @@ def test_report_contains_verdict_evidence_and_reason():
 
     assert "Assessment: REFUTED" in verdict and "[http://a]" in verdict
     assert "Assessment: INSUFFICIENT_EVIDENCE" in abstained
+    assert "Top guess (not a verdict): REFUTED 0.50" in abstained
+    assert "Confidence: 0.80" in verdict
     assert "no verdict because weak evidence" in abstained

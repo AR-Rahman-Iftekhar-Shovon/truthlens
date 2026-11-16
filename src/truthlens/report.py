@@ -32,9 +32,14 @@ def format_report(
     similarity: float,
     reason: str | None,
 ) -> str:
+    if reason:
+        top_guess = max(probabilities, key=probabilities.get)
+        confidence_line = f"Top guess (not a verdict): {top_guess} {confidence:.2f}"
+    else:
+        confidence_line = f"Confidence: {confidence:.2f}"
     lines = [
         f"Assessment: {assessment}",
-        f"Confidence: {confidence:.2f}",
+        confidence_line,
         f"Claim: {claim}",
         "Evidence:",
     ]
