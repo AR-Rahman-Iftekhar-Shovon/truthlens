@@ -19,7 +19,8 @@ def main() -> None:
     else:
         queries = claims[claims["split"] == "dev"].sample(3, random_state=7)[["claim_id", "claim"]]
         print("No --claim given: 3 dev claims (their own evidence is inside the closed corpus).\n")
-    verify_claims(queries, claims, evidence, args.seed)
+    for report in verify_claims(queries, claims, evidence, args.seed):
+        print(report + "\n" + "-" * 60)
 
 
 if __name__ == "__main__":

@@ -32,7 +32,8 @@ def main() -> None:
     claims, evidence = load_averitec_tables()
     ids = [f"a-{i}" for i in range(len(chosen))]
     queries = pd.DataFrame({"claim_id": ids, "claim": [c["claim"] for c in chosen]})
-    verify_claims(queries, claims, evidence, args.seed)
+    for report in verify_claims(queries, claims, evidence, args.seed):
+        print(report + "\n" + "-" * 60)
 
 
 if __name__ == "__main__":

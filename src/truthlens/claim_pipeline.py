@@ -1,4 +1,5 @@
 import json
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -28,10 +29,29 @@ DEPTH = 100
 MAX_LENGTH = 384
 
 
+@lru_cache(maxsize=1)
+def load_dense_model() -> SentenceTransformer:
+    return SentenceTransformer(DENSE_MODEL)
+
+
+@lru_cache(maxsize=1)
+def load_verifier(seed: int) -> tuple:
+    outputs = PROJECT_ROOT / "outputs"
+    tokenizer = AutoTokenizer.from_pretrained(MODEL)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL, num_labels=len(LABELS))
+    model.load_state_dict(torch.load(outputs / f"verifier_seed{seed}.pt"))
+    device = torch.device("cuda")
+    model.to(device)
+    probs_file = json.loads((outputs / f"verifier_probs_seed{seed}.json").read_text())
+    val_probs, val_labels, _ = load_rows(probs_file["val_retrieved"])
+    return tokenizer, model, device, fit_temperature(val_probs, val_labels)
+
+
 def verify_claims(
     queries: pd.DataFrame, claims: pd.DataFrame, evidence: pd.DataFrame, seed: int
-) -> None:
-    dense_model = SentenceTransformer(DENSE_MODEL)
+) -> list[str]:
+    """One report per query claim."""
+    dense_model = load_dense_model()
     bm25 = bm25_retrieve(queries, evidence, k=DEPTH)
     dense = dense_retrieve(queries, evidence, dense_model, k=DEPTH)
     hybrid = fuse_rankings(bm25, dense, top_n=TOP_K)
@@ -42,13 +62,7 @@ def verify_claims(
     gold_labels = dict(zip(claims["claim_id"], claims["label_mapped"]))
     similarity = max_similarity(dense_model, claim_texts, texts)
 
-    tokenizer = AutoTokenizer.from_pretrained(MODEL)
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL, num_labels=len(LABELS))
-    outputs = PROJECT_ROOT / "outputs"
-    model.load_state_dict(torch.load(outputs / f"verifier_seed{seed}.pt"))
-    device = torch.device("cuda")
-    model.to(device)
-
+    tokenizer, model, device, temperature = load_verifier(seed)
     claim_list = queries["claim"].tolist()
     evidence_list = [format_evidence(texts[cid], TOP_K) for cid in queries["claim_id"]]
     dataset = StatementDataset(
@@ -56,13 +70,9 @@ def verify_claims(
     )
     loader = DataLoader(dataset, batch_size=16, collate_fn=DataCollatorWithPadding(tokenizer))
     probabilities = np.array(predict_proba(model, loader, device))
-
-    probs_file = json.loads((outputs / f"verifier_probs_seed{seed}.json").read_text())
-    val_probs, val_labels, _ = load_rows(probs_file["val_retrieved"])
-    temperature = fit_temperature(val_probs, val_labels)
     calibrated = softmax_with_temperature(probabilities, temperature)
-    print(f"temperature {temperature:.2f}\n")
 
+    reports = []
     for index, claim_id in enumerate(queries["claim_id"]):
         probability = calibrated[index]
         label = LABELS[int(probability.argmax())]
@@ -75,17 +85,16 @@ def verify_claims(
             {"text": text, "source_url": by_id.loc[e, "source_url"]}
             for e, text in zip(hybrid[claim_id], texts[claim_id])
         ]
-        print(
-            format_report(
-                claim_texts[claim_id],
-                INSUFFICIENT if reason else label,
-                confidence,
-                dict(zip(LABELS, probability)),
-                items,
-                score,
-                reason,
-            )
+        report = format_report(
+            claim_texts[claim_id],
+            INSUFFICIENT if reason else label,
+            confidence,
+            dict(zip(LABELS, probability)),
+            items,
+            score,
+            reason,
         )
         if claim_id in gold_labels:
-            print(f"Gold label (dev): {gold_labels[claim_id]}")
-        print("-" * 60)
+            report += f"\nGold label (dev): {gold_labels[claim_id]}"
+        reports.append(report)
+    return reports
