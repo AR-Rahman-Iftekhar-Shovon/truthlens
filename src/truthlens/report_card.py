@@ -1,10 +1,51 @@
 from html import escape
 
 VERDICTS = {
-    "SUPPORTED": ("Supported", "The evidence we found agrees with this claim.", "#1d6b3a"),
-    "REFUTED": ("False", "The evidence we found contradicts this claim.", "#a3241b"),
-    "INSUFFICIENT_EVIDENCE": ("Not enough evidence", "We could not judge this claim.", "#6b6455"),
+    "SUPPORTED": ("Supported", "The evidence we found agrees with this claim.", "supported"),
+    "REFUTED": ("False", "The evidence we found contradicts this claim.", "refuted"),
+    "INSUFFICIENT_EVIDENCE": (
+        "Not enough evidence",
+        "We could not judge this claim.",
+        "unknown",
+    ),
 }
+
+
+def _domain(url: str) -> str:
+    return url.split("//")[-1].split("/")[0].removeprefix("www.")
+
+
+def _link(url: str) -> str:
+    if not url:
+        return ""
+    return f'<a class="tl-src" href="{escape(url)}" target="_blank">{escape(_domain(url))} ↗</a>'
+
+
+def _meter(label: str, value: float) -> str:
+    return (
+        f'<div class="tl-meter"><span>{label}</span><div class="tl-bar">'
+        f'<i style="width:{value:.0%}"></i></div><b>{value:.0%}</b></div>'
+    )
+
+
+def _header(claim: str, assessment: str, summary: str) -> str:
+    title, default, css = VERDICTS[assessment]
+    return (
+        f'<article class="tl-card tl-{css}"><div class="tl-top">'
+        f'<span class="tl-pill">{title}</span></div>'
+        f'<h3 class="tl-claim">{escape(claim)}</h3>'
+        f'<p class="tl-summary">{summary or default}</p>'
+    )
+
+
+def _source_line(text: str, url: str) -> str:
+    question, _, answer = text.removeprefix("Q: ").partition(" A: ")
+    body = (
+        f"<b>{escape(question)}</b><span>{escape(answer[:240])}</span>"
+        if answer
+        else f"<span>{escape(text[:240])}</span>"
+    )
+    return f'<li class="tl-ev">{body}{_link(url)}</li>'
 
 
 def format_card(
@@ -16,50 +57,60 @@ def format_card(
     similarity: float,
     reason: str | None,
 ) -> str:
-    title, summary, color = VERDICTS[assessment]
-    if reason:
-        summary += f" Reason: {escape(reason)}."
+    _, default, _ = VERDICTS[assessment]
+    summary = default + (f" Reason: {escape(reason)}." if reason else "")
     sources = "".join(_source_line(item["text"], item["source_url"]) for item in evidence)
-    numbers = ", ".join(f"{label.lower()} {value:.0%}" for label, value in probabilities.items())
+    meters = "".join(_meter(label.title(), value) for label, value in probabilities.items())
     return (
-        f'<article class="tl-card" style="--verdict:{color}">'
-        f'<p class="tl-claim">“{escape(claim)}”</p>'
-        f'<p class="tl-stamp">{title}</p>'
-        f'<p class="tl-summary">{summary}</p>'
-        f"<h4>Closest fact-check notes we found</h4><ol>{sources}</ol>"
-        f"<details><summary>Model details</summary><p>Model confidence: {numbers}. "
-        f"Best evidence match: {similarity:.2f} (needs 0.55). Answers need 75% confidence.</p>"
-        f"</details></article>"
+        _header(claim, assessment, summary)
+        + _meter("Evidence match", max(similarity, 0.0))
+        + f"<details><summary>Model confidence</summary>{meters}"
+        "<p class='tl-note'>An answer needs 75% confidence and an evidence match of 0.55.</p>"
+        "</details>"
+        + f"<h4>Closest fact-check notes</h4><ul class='tl-list'>{sources}</ul></article>"
     )
-
-
-def _domain(url: str) -> str:
-    return url.split("//")[-1].split("/")[0].removeprefix("www.")
-
-
-def _source_line(text: str, url: str) -> str:
-    question, _, answer = text.removeprefix("Q: ").partition(" A: ")
-    body = f"<b>{escape(question)}</b><br>{escape(answer[:220])}" if answer else escape(text[:220])
-    link = f' <a href="{escape(url)}" target="_blank">{escape(_domain(url))}</a>' if url else ""
-    return f"<li>{body}<span class='tl-src'>{link}</span></li>"
 
 
 def format_live_card(result: dict) -> str:
-    title, summary, color = VERDICTS[result["verdict"]]
-    used = [s for s in result["stances"] if s["stance"] != "UNKNOWN"]
-    items = "".join(
-        f"<li><span class='tl-tag'>{s['stance'].lower()} {s['confidence']:.0%}</span> "
-        f"{escape(s['snippet'][:200])} "
-        f'<a href="{escape(s["url"])}" target="_blank">{escape(s["domain"])}</a></li>'
-        for s in used
-    )
+    _, default, _ = VERDICTS[result["verdict"]]
+    summary = f"{default} Reason: {escape(result['reason'])}."
+    groups = []
+    for stance, heading in (("SUPPORTED", "Supporting"), ("REFUTED", "Contradicting")):
+        items = [s for s in result["stances"] if s["stance"] == stance]
+        rows = "".join(
+            f'<li class="tl-ev"><span>{escape(s["snippet"][:240])}</span>'
+            f"<em>{s['confidence']:.0%} sure</em>{_link(s['url'])}</li>"
+            for s in items
+        )
+        groups.append(
+            f'<h4 class="tl-{stance.lower()}-h">{heading} ({len(items)})</h4>'
+            f"<ul class='tl-list'>{rows or '<li class=tl-empty>None</li>'}</ul>"
+        )
+    used = sum(s["stance"] != "UNKNOWN" for s in result["stances"])
     read = len(result["stances"])
     return (
-        f'<article class="tl-card" style="--verdict:{color}">'
-        f'<p class="tl-claim">“{escape(result["claim"])}”</p>'
-        f'<p class="tl-stamp">{title}</p>'
-        f'<p class="tl-summary">{summary} Reason: {escape(result["reason"])}.</p>'
-        f"<h4>Trusted sources that took a side ({len(used)} of {read} read)</h4>"
-        f"<ol>{items or '<li>None of the results clearly agreed or disagreed.</li>'}</ol>"
-        "</article>"
+        _header(result["claim"], result["verdict"], summary)
+        + f"<p class='tl-note'>{used} of {read} trusted results took a side.</p>"
+        + "".join(groups)
+        + "</article>"
     )
+
+
+def format_archive_results(query: str, results: list[dict]) -> str:
+    if not results:
+        return f"<p class='tl-note'>No archived fact-check matches “{escape(query)}”.</p>"
+    blocks = []
+    for item in results:
+        notes = "".join(
+            _source_line(f"Q: {n['question']} A: {n['answer']}", n["source_url"])
+            for n in item["notes"]
+        )
+        blocks.append(
+            f'<article class="tl-card tl-archive"><div class="tl-top">'
+            f'<span class="tl-pill">{escape(item["label"])}</span>'
+            f'<span class="tl-date">{escape(item["date"])}</span></div>'
+            f'<h3 class="tl-claim">{escape(item["claim"])}</h3>'
+            f"<details><summary>{len(item['notes'])} evidence notes</summary>"
+            f"<ul class='tl-list'>{notes}</ul></details></article>"
+        )
+    return "".join(blocks)
