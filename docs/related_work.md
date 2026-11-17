@@ -48,3 +48,45 @@ Add an entry at the moment the decision is made, not later.
 - **Borrowed:** nothing in the core pipeline
 - **Diverged:** excluded from the system
 - **Why:** full data cannot be redistributed, and its social-context structure does not fit evidence-based verification
+
+### RoBERTa (Liu et al., 2019) and DistilBERT (Sanh et al., 2019)
+- **Phase / component:** Phases 3, 4 and 10, text classifier, check-worthy detector and verifier
+- **Borrowed:** the pretrained `distilroberta-base` encoder (RoBERTa pretraining, distilled with the DistilBERT recipe) fine-tuned for sequence classification
+- **Diverged:** we did not move to roberta-base; on LIAR the DistilRoBERTa model showed no clear gain over a TF-IDF baseline, so a larger model was not justified
+- **Why:** the project prefers the smallest model that measurably helps, and training must fit on a free Kaggle T4
+
+### BM25 (Robertson and Zaragoza, 2009)
+- **Phase / component:** Phase 7, lexical retrieval
+- **Borrowed:** the BM25 ranking function, used through the `rank-bm25` package with its default parameters
+- **Diverged:** nothing tuned; simple lowercase alphanumeric tokenization and no stop-word list
+- **Why:** a cheap lexical baseline that the dense and hybrid systems must beat; it also found about 3% of gold passages that dense retrieval missed in the top 50
+
+### Sentence-BERT (Reimers and Gurevych, 2019) and MiniLM (Wang et al., 2020)
+- **Phase / component:** Phase 6 dense retrieval, and the claim-evidence similarity gate
+- **Borrowed:** bi-encoder embeddings with cosine similarity, using the `all-MiniLM-L6-v2` sentence-transformers model
+- **Diverged:** used zero-shot, no fine-tuning; the same model also scores claim-evidence similarity for abstention
+- **Why:** small (about 22M parameters) and fast enough to embed the whole pool on a free GPU
+
+### Cross-encoder re-ranking (Nogueira and Cho, 2019; MS MARCO, Bajaj et al., 2016)
+- **Phase / component:** Phase 9, reranking
+- **Borrowed:** re-scoring top candidates with a BERT-style cross-encoder; the zero-shot model was `cross-encoder/ms-marco-MiniLM-L-6-v2`
+- **Diverged:** we also fine-tuned it on AVeriTeC train claims; neither version helped
+- **Why:** both versions lowered MRR and Recall@1/5 on dev, so the reranker was dropped and the result is kept as a negative finding
+
+### Reciprocal Rank Fusion (Cormack, Clarke and Buettcher, 2009)
+- **Phase / component:** Phase 8, hybrid retrieval
+- **Borrowed:** the fusion score sum of 1 / (k + rank) with k = 60 over BM25 and dense rankings
+- **Diverged:** nothing in the formula; we fix depth 100 per system and break ties by evidence id
+- **Why:** RRF needs no score normalization. Dense retrieval alone had slightly better retrieval metrics, but hybrid evidence gave better verifier accuracy over three seeds (0.722 vs 0.691), so hybrid is used
+
+### Temperature scaling (Guo et al., "On Calibration of Modern Neural Networks", 2017)
+- **Phase / component:** Phase 12, calibration and abstention
+- **Borrowed:** a single temperature fitted on held-out data by minimizing negative log-likelihood, and ECE with 10 bins
+- **Diverged:** the temperature is fitted on validation probabilities that use retrieved (not gold) evidence, matching test-time conditions
+- **Why:** it keeps accuracy unchanged and lowered dev ECE from 0.141 to 0.038 (seed 42); the abstention threshold is only meaningful on calibrated confidence
+
+### ClaimBuster (Hassan et al., 2017) and its crowdsourced benchmark (Arslan et al., 2020)
+- **Phase / component:** Phase 4, claim extraction as check-worthy sentence detection
+- **Borrowed:** the check-worthy / not check-worthy framing and the public crowdsourced and expert-labelled debate sentences
+- **Diverged:** we split by debate to avoid leakage, kept the expert set separate, and fine-tuned DistilRoBERTa instead of the original feature-based classifier
+- **Why:** the data is US presidential debates, not news, so use on articles is unmeasured
