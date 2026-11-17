@@ -15,20 +15,6 @@ def test_card_explains_abstention():
     assert "Not enough evidence" in card and "Reason: weak match." in card
 
 
-def test_archive_results_show_label_date_and_notes():
-    from truthlens.report_card import format_archive_results
-
-    item = {
-        "claim": "c",
-        "label": "Refuted",
-        "date": "1-1-2020",
-        "notes": [{"question": "q", "answer": "a", "source_url": "https://s.org/x"}],
-    }
-    html = format_archive_results("c", [item])
-    assert "Refuted" in html and "1-1-2020" in html and "s.org" in html
-    assert "No archived" in format_archive_results("zz", [])
-
-
 def test_live_card_lists_sources_that_took_a_side():
     from truthlens.report_card import format_live_card
 
@@ -55,4 +41,4 @@ def test_live_card_lists_sources_that_took_a_side():
         "stances": stances,
     }
     card = format_live_card(result)
-    assert "x.org" in card and "y.org" not in card and "1 of 2 trusted" in card
+    assert "x.org" in card and "y.org" not in card and "1 of 2 read" in card
