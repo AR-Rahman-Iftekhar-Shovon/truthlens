@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding
 
 from truthlens.config import PROJECT_ROOT
+from truthlens.device import pick_device
 from truthlens.transformer_data import StatementDataset
 from truthlens.transformer_train import predict_proba
 
@@ -16,8 +17,8 @@ def load_detector(seed: int = 42) -> dict:
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
     model = AutoModelForSequenceClassification.from_pretrained(MODEL, num_labels=2)
     weights = PROJECT_ROOT / "outputs" / f"distilroberta_base_claimbuster_seed{seed}.pt"
-    model.load_state_dict(torch.load(weights))
-    device = torch.device("cuda")
+    device = pick_device()
+    model.load_state_dict(torch.load(weights, map_location=device))
     return {"tokenizer": tokenizer, "model": model.to(device), "device": device}
 
 

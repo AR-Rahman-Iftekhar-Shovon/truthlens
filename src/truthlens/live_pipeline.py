@@ -9,6 +9,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, Data
 from truthlens.calibration import fit_temperature, softmax_with_temperature
 from truthlens.config import PROJECT_ROOT
 from truthlens.decision import load_rows
+from truthlens.device import pick_device
 from truthlens.live_search import load_fact_checkers, load_trusted_domains, search_evidence
 from truthlens.live_verdict import build_stances, decide_live_verdict
 from truthlens.nli_stance import load_nli_stance_fn
@@ -26,7 +27,7 @@ def verifier_probabilities_fn(seed: int, device: torch.device):
     outputs = PROJECT_ROOT / "outputs"
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
     model = AutoModelForSequenceClassification.from_pretrained(MODEL, num_labels=len(LABELS))
-    model.load_state_dict(torch.load(outputs / f"verifier_seed{seed}.pt"))
+    model.load_state_dict(torch.load(outputs / f"verifier_seed{seed}.pt", map_location=device))
     model.to(device)
     probs_file = json.loads((outputs / f"verifier_probs_seed{seed}.json").read_text())
     val_probs, val_labels, _ = load_rows(probs_file["val_retrieved"])
@@ -44,7 +45,7 @@ def verifier_probabilities_fn(seed: int, device: torch.device):
 def load_live_verifier(
     seed: int, stance: str = "verifier", depth: str = "basic", max_results: int = 5
 ) -> dict:
-    device = torch.device("cuda")
+    device = pick_device()
     if stance == "verifier":
         probabilities = verifier_probabilities_fn(seed, device)
 

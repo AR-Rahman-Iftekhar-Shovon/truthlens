@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -8,10 +10,26 @@ def embed(model, texts: list[str], batch_size: int = 128) -> np.ndarray:
     )
 
 
+def cached_embeddings(model, texts: list[str], path: Path) -> np.ndarray:
+    if path.exists():
+        vectors = np.load(path)
+        if len(vectors) == len(texts):
+            return vectors
+    vectors = embed(model, texts)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    np.save(path, vectors)
+    return vectors
+
+
 def retrieve_with_scores(
-    claims: pd.DataFrame, evidence: pd.DataFrame, model, k: int = 50
+    claims: pd.DataFrame,
+    evidence: pd.DataFrame,
+    model,
+    k: int = 50,
+    evidence_vectors: np.ndarray | None = None,
 ) -> dict[str, list[tuple[str, float]]]:
-    evidence_vectors = embed(model, evidence["text"].tolist())
+    if evidence_vectors is None:
+        evidence_vectors = embed(model, evidence["text"].tolist())
     claim_vectors = embed(model, claims["claim"].tolist())
     scores = claim_vectors @ evidence_vectors.T
     evidence_ids = evidence["evidence_id"].to_numpy()
@@ -24,9 +42,13 @@ def retrieve_with_scores(
 
 
 def retrieve(
-    claims: pd.DataFrame, evidence: pd.DataFrame, model, k: int = 50
+    claims: pd.DataFrame,
+    evidence: pd.DataFrame,
+    model,
+    k: int = 50,
+    evidence_vectors: np.ndarray | None = None,
 ) -> dict[str, list[str]]:
-    scored = retrieve_with_scores(claims, evidence, model, k)
+    scored = retrieve_with_scores(claims, evidence, model, k, evidence_vectors)
     return {
         claim_id: [evidence_id for evidence_id, _ in ranked] for claim_id, ranked in scored.items()
     }

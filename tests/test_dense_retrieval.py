@@ -34,3 +34,23 @@ def test_retrieve_with_scores_returns_descending_scores():
 
     assert [evidence_id for evidence_id, _ in ranked] == ["e2", "e1"]
     assert ranked[0][1] > ranked[1][1]
+
+
+class CountingModel:
+    def __init__(self):
+        self.calls = 0
+
+    def encode(self, texts, **kwargs):
+        self.calls += 1
+        return np.ones((len(texts), 2), dtype=np.float32)
+
+
+def test_cached_embeddings_reuses_file(tmp_path):
+    from truthlens.dense_retrieval import cached_embeddings
+
+    model, path = CountingModel(), tmp_path / "vectors.npy"
+    first = cached_embeddings(model, ["a", "b"], path)
+    second = cached_embeddings(model, ["a", "b"], path)
+    assert model.calls == 1 and first.shape == second.shape == (2, 2)
+    cached_embeddings(model, ["a", "b", "c"], path)
+    assert model.calls == 2
