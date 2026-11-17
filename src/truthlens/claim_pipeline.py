@@ -18,6 +18,7 @@ from truthlens.dense_retrieval import retrieve as dense_retrieve
 from truthlens.device import pick_device
 from truthlens.hybrid_retrieval import fuse_rankings
 from truthlens.report import abstention_reason, format_report
+from truthlens.report_card import format_card
 from truthlens.transformer_data import StatementDataset
 from truthlens.transformer_train import predict_proba
 from truthlens.verification_data import LABELS, format_evidence
@@ -50,7 +51,11 @@ def load_verifier(seed: int) -> tuple:
 
 
 def verify_claims(
-    queries: pd.DataFrame, claims: pd.DataFrame, evidence: pd.DataFrame, seed: int
+    queries: pd.DataFrame,
+    claims: pd.DataFrame,
+    evidence: pd.DataFrame,
+    seed: int,
+    html: bool = False,
 ) -> list[str]:
     """One report per query claim."""
     dense_model = load_dense_model()
@@ -90,7 +95,8 @@ def verify_claims(
             {"text": text, "source_url": by_id.loc[e, "source_url"]}
             for e, text in zip(hybrid[claim_id], texts[claim_id])
         ]
-        report = format_report(
+        render = format_card if html else format_report
+        report = render(
             claim_texts[claim_id],
             INSUFFICIENT if reason else label,
             confidence,
@@ -99,7 +105,7 @@ def verify_claims(
             score,
             reason,
         )
-        if claim_id in gold_labels:
+        if claim_id in gold_labels and not html:
             report += f"\nGold label (dev): {gold_labels[claim_id]}"
         reports.append(report)
     return reports
