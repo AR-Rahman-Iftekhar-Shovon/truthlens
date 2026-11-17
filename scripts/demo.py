@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import gradio as gr
 import pandas as pd
@@ -7,9 +8,12 @@ from truthlens.article import select_claims, split_sentences
 from truthlens.averitec import load_averitec_tables
 from truthlens.claim_detector import load_detector, score_sentences
 from truthlens.claim_pipeline import verify_claims
+from truthlens.live_pipeline import load_live_verifier, verify_live_claim
+from truthlens.report_card import format_live_card
 
 CSS = """
-.gradio-container {max-width: 760px !important; background: #f6f3ec; font-family: Georgia, serif;}
+body, .gradio-container {background: #f6f3ec !important; font-family: Georgia, serif;}
+.gradio-container {max-width: 1180px !important;}
 .tl-head h1 {font-size: 34px; margin: 0; letter-spacing: -0.5px;}
 .tl-head p {color: #5a5446; margin: 4px 0 0; font-size: 15px;}
 .tl-card {background: #fffdf8; border-top: 4px solid var(--verdict); padding: 18px 20px;
@@ -24,18 +28,25 @@ CSS = """
 .tl-card a {color: #3b372e;}
 .tl-card details {font: 13px Arial, sans-serif; color: #5a5446;}
 .tl-picked {font: 14px Arial, sans-serif; color: #5a5446;}
+.tl-src a, .tl-tag {font: 12px Arial, sans-serif; color: #5a5446; margin-left: 6px;}
+.tl-card li {margin-bottom: 8px;}
 """
 INTRO = (
     '<div class="tl-head"><h1>TruthLens</h1><p>Checks a claim against evidence and says '
-    "&ldquo;not enough evidence&rdquo; instead of guessing. Evidence comes from a fixed "
-    "collection of 9,453 fact-check notes (2018&ndash;2021), so new or local news usually "
-    "has no answer. A research demo, not a fact-checker.</p></div>"
+    "&ldquo;not enough evidence&rdquo; instead of guessing. <i>Search the web</i> reads "
+    "trusted sites live; <i>Fact-check archive</i> uses 9,453 fact-check notes from "
+    "2018&ndash;2021. A research demo, not a fact-checker.</p></div>"
 )
 CLAIM_EXAMPLES = [
     "China seek for court’s approval to kill the over 20,000 coronavirus patients to avoid "
     "further spread of the virus.",
     "The Prime Minister of Bangladesh is named Shovon.",
 ]
+WEB_NOTE = (
+    "Searches an allowlist of fact-checkers, news agencies and official sites. "
+    "It says False only when a fact-checking site rates the claim false, and Supported only "
+    "when two different sites agree. Experimental: in our test it answered 3 of 20 claims."
+)
 ARTICLE_EXAMPLE = (
     "China seek for court’s approval to kill the over 20,000 coronavirus patients to avoid "
     "further spread of the virus. Nigeria’s urban population at the time of independence was "
@@ -58,6 +69,17 @@ def main() -> None:
         queries = pd.DataFrame({"claim_id": [f"d-{i}" for i in range(len(texts))], "claim": texts})
         return "".join(verify_claims(queries, claims, evidence, args.seed, html=True))
 
+    live = {}
+
+    def check_web(text: str) -> str:
+        if not text.strip():
+            return "<p>Type a claim first.</p>"
+        if not os.getenv("TAVILY_API_KEY"):
+            return "<p>Web search needs TAVILY_API_KEY in the environment.</p>"
+        if not live:
+            live.update(load_live_verifier(args.seed, "nli", "advanced", 10))
+        return format_live_card(verify_live_claim(text.strip(), live))
+
     def check_claim(text: str) -> str:
         return check([text.strip()]) if text.strip() else "<p>Type a claim first.</p>"
 
@@ -76,18 +98,25 @@ def main() -> None:
 
     with gr.Blocks(css=CSS, title="TruthLens") as demo:
         gr.HTML(INTRO)
-        with gr.Tab("Check a claim"):
-            claim = gr.Textbox(label="Claim", lines=2)
-            gr.Examples(CLAIM_EXAMPLES, inputs=claim)
-            claim_out = gr.HTML()
-            gr.Button("Check", variant="primary").click(check_claim, claim, claim_out)
-        with gr.Tab("Check an article"):
-            article = gr.Textbox(label="Article text", lines=7)
-            gr.Examples([ARTICLE_EXAMPLE], inputs=article)
-            article_out = gr.HTML()
-            gr.Button("Find and check claims", variant="primary").click(
-                check_article, article, article_out
-            )
+        with gr.Row():
+            with gr.Column(scale=2):
+                with gr.Tab("Search the web"):
+                    web = gr.Textbox(label="Claim", lines=3)
+                    web_button = gr.Button("Search trusted sources", variant="primary")
+                    gr.Markdown(WEB_NOTE)
+                with gr.Tab("Fact-check archive"):
+                    claim = gr.Textbox(label="Claim", lines=3)
+                    claim_button = gr.Button("Check", variant="primary")
+                    gr.Examples(CLAIM_EXAMPLES, inputs=claim)
+                with gr.Tab("Article"):
+                    article = gr.Textbox(label="Article text", lines=8)
+                    article_button = gr.Button("Find and check claims", variant="primary")
+                    gr.Examples([ARTICLE_EXAMPLE], inputs=article)
+            with gr.Column(scale=3):
+                report = gr.HTML("<p class='tl-picked'>The report appears here.</p>")
+        web_button.click(check_web, web, report)
+        claim_button.click(check_claim, claim, report)
+        article_button.click(check_article, article, report)
     demo.launch(share=True)
 
 
