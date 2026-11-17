@@ -13,6 +13,9 @@ fact_checkers:
     - boombd.com
     - jachai.org
     - en.dismislab.com
+    - dismislab.com
+    - factcheck.afp.com
+    - leadstories.com
 
 news_agencies:
   - bbc.com
@@ -33,6 +36,13 @@ news_agencies:
   - ecs.gov.bd
   - btrc.gov.bd
   - who.int
+  - tbsnews.net
+  - newagebd.net
+  - samakal.net
+  - ittefaq.com.bd
+  - theguardian.com
+  - nytimes.com
+  - dw.com
 
 official_sources:
   - un.org
